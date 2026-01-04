@@ -1,3 +1,19 @@
+# Data Handling
 pandas
 numpy
-scipy
+matplotlib
+seaborn
+pyarrow
+
+# NLP & Embeddings
+sentence-transformers
+langchain
+langchain-community
+langchain-huggingface
+
+# Vector Databases
+chromadb
+faiss-cpu
+
+# UI (For Task 4)
+streamlit
