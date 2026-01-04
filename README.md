@@ -83,7 +83,7 @@ Clone the repo:
 
 Bash
 
-git clone https://github.com/your-username/rag-complaint-chatbot.git
+git clone https://github.com/rahel-yab/Intelligent-Complaint-Analysis-for-Financial-Services.git
 cd rag-complaint-chatbot
 Install Dependencies:
 
