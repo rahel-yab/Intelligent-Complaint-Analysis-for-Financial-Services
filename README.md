@@ -81,18 +81,16 @@ To set up the environment and run the current preprocessing scripts:
 
 Clone the repo:
 
-Bash
+```bash
 
 git clone https://github.com/rahel-yab/Intelligent-Complaint-Analysis-for-Financial-Services.git
 cd rag-complaint-chatbot
 Install Dependencies:
-
-Bash
-
+```
+```bash
 pip install -r requirements.txt
 Run Preprocessing (Task 1):
-
-Bash
+```
 
 python src/preprocessing.py
 📈 Next Steps
