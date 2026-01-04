@@ -1,7 +1,5 @@
 # Intelligent Complaint Analysis for Financial Services
 
-💳 CrediTrust: Intelligent Complaint Analysis Bot
-Transforming Customer Feedback into Financial Insights with RAG
 CrediTrust is a digital finance leader in East Africa. As we scale to over 500,000 users, the volume of manual feedback analysis has become a bottleneck for our Product and Compliance teams. This project implements a Retrieval-Augmented Generation (RAG) pipeline to allow stakeholders to query thousands of unstructured customer complaints using natural language.
 
 🚀 Project Status: Halfway Milestone
