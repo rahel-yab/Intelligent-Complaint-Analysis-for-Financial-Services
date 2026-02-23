@@ -51,9 +51,66 @@ def summarize_preprocessing(df_before: pd.DataFrame, df_after: pd.DataFrame) -> 
     }
 
 
-def run_preprocessing(input_csv: Path, output_csv: Path) -> dict:
+def create_stratified_sample(
+    df: pd.DataFrame,
+    sample_size: int,
+    stratify_col: str = "product_category",
+    random_state: int = 42,
+) -> pd.DataFrame:
+    if sample_size <= 0:
+        raise ValueError("sample_size must be greater than 0")
+    if stratify_col not in df.columns:
+        raise ValueError(f"Dataframe must include '{stratify_col}' for stratified sampling.")
+    if sample_size >= len(df):
+        return df.copy()
+
+    group_counts = df[stratify_col].value_counts()
+    proportions = group_counts / group_counts.sum()
+
+    targets = (proportions * sample_size).round().astype(int)
+    targets = targets.clip(lower=1)
+
+    while targets.sum() > sample_size:
+        reducible = targets[targets > 1]
+        if reducible.empty:
+            break
+        largest_group = reducible.idxmax()
+        targets.loc[largest_group] -= 1
+
+    while targets.sum() < sample_size:
+        add_to_group = (proportions - (targets / sample_size)).idxmax()
+        targets.loc[add_to_group] += 1
+
+    sampled_groups = []
+    for group_name, target in targets.items():
+        group_df = df[df[stratify_col] == group_name]
+        n = min(int(target), len(group_df))
+        sampled_groups.append(group_df.sample(n=n, random_state=random_state))
+
+    sampled_df = pd.concat(sampled_groups, axis=0).sample(frac=1, random_state=random_state).reset_index(drop=True)
+
+    if len(sampled_df) > sample_size:
+        sampled_df = sampled_df.sample(n=sample_size, random_state=random_state).reset_index(drop=True)
+
+    return sampled_df
+
+
+def run_preprocessing(
+    input_csv: Path,
+    output_csv: Path,
+    sample_size: int | None = None,
+    random_state: int = 42,
+) -> dict:
     raw_df = pd.read_csv(input_csv, low_memory=False)
     processed_df = preprocess_dataframe(raw_df)
+
+    if sample_size is not None:
+        processed_df = create_stratified_sample(
+            processed_df,
+            sample_size=sample_size,
+            stratify_col="product_category",
+            random_state=random_state,
+        )
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     processed_df.to_csv(output_csv, index=False)
@@ -75,16 +132,35 @@ def parse_args() -> argparse.Namespace:
         default=Path("data/processed/filtered_complaints.csv"),
         help="Path to save filtered and cleaned complaints CSV.",
     )
+    parser.add_argument(
+        "--sample-size",
+        type=int,
+        default=None,
+        help="Optional stratified sample size to reduce dataset volume (e.g., 10000).",
+    )
+    parser.add_argument(
+        "--random-state",
+        type=int,
+        default=42,
+        help="Random seed for reproducible sampling.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    summary = run_preprocessing(args.input_csv, args.output_csv)
+    summary = run_preprocessing(
+        args.input_csv,
+        args.output_csv,
+        sample_size=args.sample_size,
+        random_state=args.random_state,
+    )
     print("Preprocessing complete")
     print(f"Rows before: {summary['rows_before']}")
     print(f"Rows after: {summary['rows_after']}")
     print(f"Average word count: {summary['avg_word_count']:.2f}")
+    if args.sample_size is not None:
+        print(f"Applied stratified sample size: {args.sample_size}")
     print(f"Saved: {args.output_csv}")
 
 
